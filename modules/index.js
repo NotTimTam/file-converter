@@ -1,5 +1,5 @@
-import TextToText from "./TextToText.js";
+import JPGToBase64 from "./JPGToBase64.js";
 
-const Modules = [TextToText];
+const Modules = [JPGToBase64];
 
 export default Modules;

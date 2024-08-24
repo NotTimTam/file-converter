@@ -1,5 +1,6 @@
+import fs from "fs-extra";
 import { handleError } from "../util/errors.js";
-import mime from "mime-types";
+import archiver from "archiver";
 
 /**
  * CONVERT
@@ -8,51 +9,98 @@ import mime from "mime-types";
  *
  * Convert a file from one type to another.
  */
-export const convert = (req, res) => {
+export const convert = async (req, res) => {
 	const {
 		fileConverter: { modules },
-		files: { files },
 		body: { module },
 	} = req;
 
+	let { files } = req;
+
+	const unlinkAndGo = async (go) => {
+		const { files } = req;
+
+		if (files && files.files && files.files instanceof Array)
+			for (const { path } of files.files) await fs.unlink(path);
+
+		if (go) await go();
+	};
+
 	try {
 		if (!module)
-			return res
-				.status(400)
-				.send("No 'module' value provided in request.");
+			return await unlinkAndGo(() =>
+				res.status(400).send("No 'module' value provided in request.")
+			);
 
 		if (typeof module !== "string")
-			return res
-				.status(400)
-				.send(
-					`Invalid 'module' value provided in request: "${module}".`
-				);
+			return await unlinkAndGo(() =>
+				res
+					.status(400)
+					.send(
+						`Invalid 'module' value provided in request: "${module}".`
+					)
+			);
 
 		const moduleObject = modules.find(({ label }) => label === module);
 
 		if (!moduleObject)
-			return res
-				.status(400)
-				.send(
-					`No file conversion module exists with label "${module}".`
-				);
+			return await unlinkAndGo(() =>
+				res
+					.status(400)
+					.send(
+						`No file conversion module exists with label "${module}".`
+					)
+			);
 
-		if (!files)
-			return res
-				.status(400)
-				.send("No 'files' array provided in request.");
+		if (!files || !files.files)
+			return await unlinkAndGo(() =>
+				res.status(400).send("No 'files' array provided in request.")
+			);
+
+		files = files.files;
 
 		if (!(files instanceof Array))
-			return res
-				.status(400)
-				.send(
-					"Invalid 'files' value provided in request. Expected a FormData field containing files."
+			return await unlinkAndGo(() =>
+				res
+					.status(400)
+					.send(
+						"Invalid 'files' value provided in request. Expected a FormData field containing files."
+					)
+			);
+
+		for (const { mimetype } of files)
+			if (!moduleObject.convertsFrom(mimetype))
+				return await unlinkAndGo(() =>
+					res
+						.status(400)
+						.send(
+							`This conversion module does not support mimetype: "${mimetype}". Supported mimetypes: ${moduleObject.from}`
+						)
 				);
 
-		// console.log(files);
+		try {
+			await moduleObject.convert(files); // Convert all files.
 
-		res.status(200).json(files);
+			res.setHeader(
+				"Content-Disposition",
+				`attachment; filename=Converted Files ${new Date().toLocaleString()}.zip`
+			);
+			res.setHeader("Content-Type", "application/zip");
+
+			const zip = archiver("zip", { zlib: { level: 9 } });
+			zip.pipe(res);
+
+			for (const { path, originalname } of files) {
+				zip.file(path, { name: originalname });
+			}
+
+			await zip.finalize();
+
+			await unlinkAndGo();
+		} catch (err) {
+			throw err;
+		}
 	} catch (err) {
-		return handleError(res, err);
+		return await unlinkAndGo(() => handleError(res, err));
 	}
 };

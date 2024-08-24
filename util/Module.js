@@ -4,9 +4,9 @@ export default class Module {
 	/**
 	 * A file conversion module.
 	 * @param {*} config The module's configuration object.
-	 * @param {string} config.from The mimetype to convert from.
-	 * @param {string} config.to The mimetype to convert to.
-	 * @param {function} config.method An asynchronous callback, accepting.
+	 * @param {string|Array<string>} config.from The mimetype to convert from. Can be an array of supported mimetypes.
+	 * @param {string|Array<string>} config.to The mimetype to convert to. Can be an array of supported mimetypes.
+	 * @param {function} config.method An asynchronous callback, that accepts a file object, and converts that files content.
 	 * @param {string} config.label A unique label for this module.
 	 * @param {string} config.description Optional detailed description for module.
 	 */
@@ -25,21 +25,46 @@ export default class Module {
 				"No 'from' value provided to Module constructor config."
 			);
 
-		if (
+		if (from instanceof Array)
+			for (const mimetype of from) {
+				if (
+					typeof mimetype !== "string" ||
+					!Object.values(mime.types).includes(mimetype)
+				)
+					throw new SyntaxError(
+						"Invalid 'from' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values."
+					);
+			}
+		else if (
 			typeof from !== "string" ||
-			!Object.values(mime.types).includes(from)
+			(typeof from === "string" &&
+				!Object.values(mime.types).includes(from))
 		)
 			throw new SyntaxError(
-				"Invalid 'from' value provided to Module constructor config. Expected a valid MIME type string or file extension."
+				"Invalid 'from' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values."
 			);
 
 		if (!to)
 			throw new Error(
 				"No 'to' value provided to Module constructor config."
 			);
-		if (typeof to !== "string" || !Object.values(mime.types).includes(to))
+
+		if (to instanceof Array)
+			for (const mimetype of to) {
+				if (
+					typeof mimetype !== "string" ||
+					!Object.values(mime.types).includes(mimetype)
+				)
+					throw new SyntaxError(
+						"Invalid 'to' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values."
+					);
+			}
+		else if (
+			typeof to !== "string" ||
+			(typeof to === "string" && !Object.values(mime.types).includes(to))
+		)
 			throw new SyntaxError(
-				"Invalid 'to' value provided to Module constructor config. Expected a valid MIME type string or file extension."
+				"Invalid 'to' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values."
 			);
 
 		if (!method || typeof method !== "function")
@@ -75,7 +100,37 @@ export default class Module {
 		this.label = label;
 	}
 
+	/**
+	 * Get whether this module can convert files **from** a certain mimetype.
+	 * @param {string} mimetype The mimetype to check.
+	 * @returns {boolean} Whether or not the mimetype is supported.
+	 */
+	convertsFrom(mimetype) {
+		if (this.from instanceof Array && this.from.includes(mimetype))
+			return true;
+		if (this.from === mimetype) return true;
+		return false;
+	}
+
+	/**
+	 * Get whether this module can convert files **to** a certain mimetype.
+	 * @param {string} mimetype The mimetype to check.
+	 * @returns {boolean} Whether or not the mimetype is supported.
+	 */
+	convertsTo(mimetype) {
+		if (this.to instanceof Array && this.to.includes(mimetype)) return true;
+		if (this.to === mimetype) return true;
+		return false;
+	}
+
+	/**
+	 * Convert an array of files using the converter's method.
+	 * @param {Array<*>} files The array of files to convert.
+	 * @returns {string} The path to a zip containing the converted files.
+	 */
 	async convert(files) {
-		return await this.method(files);
+		await Promise.all(files.map(async (file) => await this.method(file)));
+
+		return files;
 	}
 }
