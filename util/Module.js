@@ -1,76 +1,30 @@
 import mime from "mime-types";
+import FileConverter from "../index.js";
 
 export default class Module {
 	/**
 	 * A file conversion module.
 	 * @param {*} config The module's configuration object.
 	 * @param {string|Array<string>} config.from The mimetype to convert from. Can be an array of supported mimetypes.
-	 * @param {string|Array<string>} config.to The mimetype to convert to. Can be an array of supported mimetypes.
-	 * @param {function} config.method An asynchronous callback, that accepts a file object, and converts that files content.
+	 * @param {string} config.to The mimetype to convert to.
 	 * @param {string} config.label A unique label for this module.
 	 * @param {string} config.description Optional detailed description for module.
+	 * @param {function} config.method An asynchronous callback, that accepts a file object, and converts that file's content, storing the converted data in the file at the provided `path` value.
+	 * @param {boolean} config.customReturn By default, a `Module`'s `convert` method will change the file data to match the conversion that takes place.
+	 * Setting this value to `true` will make it so that the `method` callback must return the "file" data passed to it,
+	 * with any necessary changes made, such as changing the file extension in the `originalname` parameter,
+	 * or changing the encoding/mimetype. This value also stops the `Module` from throwing an error if the provided `to`/`from` mimetype values are "invalid".
 	 */
 	constructor(
 		config = {
 			method: async (_) => _,
+			customReturn: false,
 		}
 	) {
 		if (!config)
 			throw new Error("No config provided to Module constructor.");
 
-		const { from, to, method, label, description } = config;
-
-		if (!from)
-			throw new Error(
-				"No 'from' value provided to Module constructor config."
-			);
-
-		if (from instanceof Array)
-			for (const mimetype of from) {
-				if (
-					typeof mimetype !== "string" ||
-					!Object.values(mime.types).includes(mimetype)
-				)
-					throw new SyntaxError(
-						"Invalid 'from' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values."
-					);
-			}
-		else if (
-			typeof from !== "string" ||
-			(typeof from === "string" &&
-				!Object.values(mime.types).includes(from))
-		)
-			throw new SyntaxError(
-				"Invalid 'from' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values."
-			);
-
-		if (!to)
-			throw new Error(
-				"No 'to' value provided to Module constructor config."
-			);
-
-		if (to instanceof Array)
-			for (const mimetype of to) {
-				if (
-					typeof mimetype !== "string" ||
-					!Object.values(mime.types).includes(mimetype)
-				)
-					throw new SyntaxError(
-						"Invalid 'to' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values."
-					);
-			}
-		else if (
-			typeof to !== "string" ||
-			(typeof to === "string" && !Object.values(mime.types).includes(to))
-		)
-			throw new SyntaxError(
-				"Invalid 'to' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values."
-			);
-
-		if (!method || typeof method !== "function")
-			throw new SyntaxError(
-				`Expected an asynchronous callback function for Module constructor config.method value.`
-			);
+		const { from, to, method, label, description, customReturn } = config;
 
 		if (!label || typeof label !== "string")
 			throw new SyntaxError(
@@ -84,20 +38,67 @@ export default class Module {
 		if (description) {
 			if (typeof description !== "string")
 				throw new SyntaxError(
-					`Expected a string value for Module constructor config.description.`
+					`(${label}) Expected a string value for Module constructor config.description.`
 				);
 			if (description.length > 512)
 				throw new SyntaxError(
-					"Module descriptions cannot be longer than 512 characters."
+					`(${label}) Module descriptions cannot be longer than 512 characters.`
 				);
 
 			this.description = description;
 		}
 
+		if (!from)
+			throw new Error(
+				`(${label}) No 'from' value provided to Module constructor config.`
+			);
+
+		if (from instanceof Array)
+			for (const mimetype of from) {
+				if (
+					typeof mimetype !== "string" ||
+					(!Object.values(mime.types).includes(mimetype) &&
+						!customReturn)
+				)
+					throw new SyntaxError(
+						`(${label}) Invalid 'from' value provided to Module constructor config. Expected a valid MIME type, file extension, or array of those values.`
+					);
+			}
+		else if (
+			typeof from !== "string" ||
+			(typeof from === "string" &&
+				!Object.values(mime.types).includes(from) &&
+				!customReturn)
+		)
+			throw new SyntaxError(
+				`(${label}) Invalid 'from' value provided to Module constructor config. Expected a valid MIME type, or array of MIME types.`
+			);
+
+		if (!to)
+			throw new Error(
+				`(${label}) No 'to' value provided to Module constructor config.`
+			);
+
+		if (
+			typeof to !== "string" ||
+			(typeof to === "string" &&
+				!Object.values(mime.types).includes(to) &&
+				!customReturn)
+		)
+			throw new SyntaxError(
+				`(${label}) Invalid 'to' value provided to Module constructor config. Expected a valid MIME type.`
+			);
+
+		if (!method || typeof method !== "function")
+			throw new SyntaxError(
+				`(${label}) Expected an asynchronous callback function for Module constructor config.method value.`
+			);
+
 		this.from = from;
 		this.to = to;
 		this.method = method;
 		this.label = label;
+		this.customReturn = customReturn;
 	}
 
 	/**
@@ -129,7 +130,40 @@ export default class Module {
 	 * @returns {string} The path to a zip containing the converted files.
 	 */
 	async convert(files) {
-		await Promise.all(files.map(async (file) => await this.method(file)));
+		const { label, customReturn } = this;
+
+		files = await Promise.all(
+			files.map(async (file) => {
+				const newFile = await this.method(file);
+
+				// If the method callback does return file data.
+				if (newFile) {
+					if (customReturn) return newFile;
+					else
+						throw new Error(
+							`(${label}) This module's 'customReturn' parameter is 'false'/'undefined', but the module's method callback returns a file data object, even though it shouldn't.`
+						);
+				} else {
+					// If the method callback does NOT return file data.
+					if (customReturn)
+						throw new Error(
+							`(${label}) This module's 'customReturn' parameter is 'true', but the module's method callback does not return a file data object.`
+						);
+					else {
+						file.mimetype = this.to;
+						file.encoding = mime.charset(file.mimetype);
+
+						// Replace the filename.
+						file.originalname = FileConverter.replaceFileExtension(
+							file.originalname,
+							mime.extension(file.mimetype)
+						);
+
+						return file;
+					}
+				}
+			})
+		);
 
 		return files;
 	}

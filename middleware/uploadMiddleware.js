@@ -11,7 +11,7 @@ const uploadMiddleware = async (req, res, next) => {
 
 		const multerConfig = {
 			// storage,
-			dest: "uploads/",
+			dest: fileConverter.temp,
 		};
 
 		if (fileConverter.fileSizeLimit)
