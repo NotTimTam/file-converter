@@ -1,6 +1,5 @@
 import multer from "multer";
 import { handleError } from "../util/errors.js";
-// const storage = multer.memoryStorage();
 
 const uploadMiddleware = async (req, res, next) => {
 	const { fileConverter } = req;
@@ -10,7 +9,6 @@ const uploadMiddleware = async (req, res, next) => {
 			return res.status(400).send("No data provided in request body.");
 
 		const multerConfig = {
-			// storage,
 			dest: fileConverter.temp,
 		};
 
@@ -26,8 +24,6 @@ const uploadMiddleware = async (req, res, next) => {
 
 		upload(req, res, (err) => {
 			if (err instanceof multer.MulterError) {
-				const { code, field } = err;
-
 				const errorMessages = {
 					LIMIT_PART_COUNT:
 						"More form props & files provided than the permitted amount.",
@@ -40,7 +36,7 @@ const uploadMiddleware = async (req, res, next) => {
 					MISSING_FIELD_NAME: "Expected field name not provided.",
 				};
 
-				return res.status(400).send(errorMessages[code]);
+				return res.status(400).send(errorMessages[err.code]);
 			} else if (err) throw err;
 
 			next();

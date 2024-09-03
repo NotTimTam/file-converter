@@ -6,7 +6,7 @@ const ImageToBase64 = new Module({
 	description: "Convert plaintext files to plaintext files.",
 	from: ["image/jpeg", "image/png"],
 	to: "text/plain",
-	customReturn: true,
+	// customReturn: true,
 	method: async (file) => {
 		const { path, originalname, mimetype } = file;
 
@@ -16,11 +16,10 @@ const ImageToBase64 = new Module({
 
 		await fs.writeFile(path, base64Data, { encoding: "utf-8" });
 
-		// console.log(file);
-
-		return {
-			...file,
-		};
+		// return {
+		// 	...file,
+		// 	mimetype: ImageToBase64.to,
+		// };
 	},
 });
 
