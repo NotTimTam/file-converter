@@ -3,6 +3,62 @@ import FileConverter from "../index.js";
 
 export default class Module {
 	/**
+	 * Validate a file object.
+	 * @param {*} file The file object to validate.
+	 * @param {"files"} file.fieldname The name of the field the file is stored in. Should be `"files"`.
+	 * @returns {string|boolean} `true` if the file object is valid, or a string that explains the reason why it isn't.
+	 */
+	static validateFileObject = (file) => {
+		const fieldValidators = {
+			fieldname: (value) =>
+				value === "files"
+					? true
+					: `File object field "fieldname" should equal "files"`,
+			originalname: (value) =>
+				value && typeof value === "string"
+					? true
+					: `Expected string value for file field "originalname"`,
+			encoding: (value) =>
+				value && typeof value === "string"
+					? true
+					: `Expected a valid mime content type or "7bit" for file field "originalname".`,
+			mimetype: (value) =>
+				value &&
+				typeof value === "string" &&
+				Object.values(mime.types).includes(value)
+					? true
+					: `Expected a valid mimetype for file field "mimetype".`,
+			destination: (value) =>
+				value && typeof value === "string"
+					? true
+					: `Expected multer-generated path string for file field "destination".`,
+			filename: (value) =>
+				value && typeof value === "string"
+					? true
+					: `Expected a multer-generated for file field "filename".`,
+			path: (value) =>
+				value && typeof value === "string"
+					? true
+					: `Expected a multer-generated string for file field "path".`,
+			size: (value) =>
+				value && typeof value === "number"
+					? true
+					: `Expected a number for file field "size".`,
+		};
+
+		for (const [key, value] of Object.entries(file)) {
+			if (!fieldValidators.hasOwnProperty(key))
+				return `Invalid field "${key}" in file object.`;
+
+			const valid = fieldValidators[key](value);
+
+			if (valid !== true) return valid;
+		}
+
+		return true;
+	};
+
+	/**
 	 * A file conversion module.
 	 * @param {*} config The module's configuration object.
 	 * @param {string|Array<string>} config.from The mimetype to convert from. Can be an array of supported mimetypes.
@@ -138,8 +194,12 @@ export default class Module {
 
 				// If the method callback does return file data.
 				if (newFile) {
-					if (customReturn) return newFile;
-					else
+					if (customReturn) {
+						const valid = Module.validateFileObject(newFile);
+						if (valid !== true) throw new Error(valid);
+
+						return newFile;
+					} else
 						throw new Error(
 							`(${label}) This module's 'customReturn' parameter is 'false'/'undefined', but the module's method callback returns a file data object, even though it shouldn't.`
 						);

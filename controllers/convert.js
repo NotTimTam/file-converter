@@ -83,7 +83,10 @@ export const convert = async (req, res) => {
 
 			res.setHeader(
 				"Content-Disposition",
-				`attachment; filename=Converted Files ${new Date().toLocaleString()}.zip`
+				`attachment; filename=Converted_Files_${new Date()
+					.toISOString()
+					.replace(/:/g, "-")
+					.replace("T", "@")}.zip`
 			);
 			res.setHeader("Content-Type", "application/zip");
 

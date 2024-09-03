@@ -1,5 +1,5 @@
-import JPGToBase64 from "./JPGToBase64.js";
+import ImageToBase64 from "./ImageToBase64.js";
 
-const Modules = [JPGToBase64];
+const Modules = [ImageToBase64];
 
 export default Modules;

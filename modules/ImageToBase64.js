@@ -1,12 +1,12 @@
 import Module from "../util/Module.js";
 import fs from "fs-extra";
 
-const JPGToBase64 = new Module({
-	label: "JPGToBase64",
+const ImageToBase64 = new Module({
+	label: "ImageToBase64",
 	description: "Convert plaintext files to plaintext files.",
-	from: "image/jpeg",
+	from: ["image/jpeg", "image/png"],
 	to: "text/plain",
-	// customReturn: true,
+	customReturn: true,
 	method: async (file) => {
 		const { path, originalname, mimetype } = file;
 
@@ -18,10 +18,10 @@ const JPGToBase64 = new Module({
 
 		// console.log(file);
 
-		// return {
-		// 	...file,
-		// };
+		return {
+			...file,
+		};
 	},
 });
 
-export default JPGToBase64;
+export default ImageToBase64;

@@ -6,7 +6,6 @@ import convertRoutes from "./routes/convertRoutes.js";
 import Module from "./util/Module.js";
 import Modules from "./modules/index.js";
 import fs from "fs";
-import path from "path";
 
 export { default as Module } from "./util/Module.js";
 
