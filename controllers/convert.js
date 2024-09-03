@@ -11,6 +11,7 @@ import archiver from "archiver";
  */
 export const convert = async (req, res) => {
 	const {
+		fileConverter,
 		fileConverter: { modules },
 		body: { module },
 	} = req;
@@ -99,13 +100,14 @@ export const convert = async (req, res) => {
 		const zip = archiver("zip", { zlib: { level: 9 } });
 		zip.pipe(res);
 
-		await moduleObject.convert(files, (file) => {
-			console.log("Converted file:", file);
-		}); // Convert all files.
-
-		for (const { path, originalname } of files) {
-			zip.file(path, { name: originalname });
-		}
+		await moduleObject.convert(
+			files,
+			({ size }, { path, originalname }) => {
+				fileConverter.stats.dataConverted += size / 1e6;
+				fileConverter.stats.filesConverted++;
+				zip.file(path, { name: originalname }); // Add the file to the zip.
+			}
+		); // Convert all files.
 
 		await zip.finalize();
 

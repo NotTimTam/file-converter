@@ -202,7 +202,7 @@ export default class Module {
 	/**
 	 * Convert an array of files using the converter's method.
 	 * @param {Array<*>} files The array of files to convert.
-	 * @param {function} callback An optional asynchronous callback that is passed each file after it is converted.
+	 * @param {function} callback An optional asynchronous callback that is passed each file before/after it is converted. `(old, new)`
 	 * @returns {string} The path to a zip containing the converted files.
 	 */
 	async convert(files, callback) {
@@ -210,6 +210,7 @@ export default class Module {
 
 		files = await Promise.all(
 			files.map(async (file) => {
+				const old = JSON.stringify(file);
 				const newFile = await this.method(file);
 
 				// If the method callback does return file data.
@@ -239,7 +240,11 @@ export default class Module {
 					}
 				}
 
-				if (callback) await callback(customReturn ? newFile : file);
+				if (callback)
+					await callback(
+						JSON.parse(old),
+						customReturn ? newFile : file
+					);
 			})
 		);
 

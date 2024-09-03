@@ -21,6 +21,11 @@ export default class FileConverter {
 	constructor(config = { modules: [] }) {
 		try {
 			this.modules = Modules;
+			this.stats = {
+				initialization: Date.now(),
+				filesConverted: 0,
+				dataConverted: 0,
+			};
 
 			if (config) {
 				if (config.modules) {
@@ -113,6 +118,7 @@ export default class FileConverter {
 		router.use("/modules", modulesRoutes);
 		router.use("/mimetypes", mimeTypesRoutes);
 		router.use("/convert", convertRoutes);
+		router.get("/stats", (req, res) => res.status(200).json(this.stats));
 		router.use("/", helpRoutes);
 
 		return router;

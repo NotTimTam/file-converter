@@ -1,7 +1,7 @@
 {
 	"name": "file-converter",
 	"version": "1.0.1",
-	"description": "A self-hostable, open-source file conversion server.",
+	"description": "A headless, self-hostable, open-source file conversion server.",
 	"main": "index.js",
 	"type": "module",
 	"private": "true",

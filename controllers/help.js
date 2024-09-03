@@ -19,6 +19,9 @@ export const help = (req, res) => {
 						optional: true,
 					},
 				],
+				response: {
+					mimeTypes: "An array of valid mimetypes.",
+				},
 			},
 			{
 				route: "/mimetypes/validate",
@@ -31,11 +34,22 @@ export const help = (req, res) => {
 						optional: false,
 					},
 				],
+				response: {
+					valid: "A boolean indicating if the mimetype is valid.",
+					extension:
+						"The file extension for this mimetype. (if valid)",
+					charset: "The charset for this mimetype. (if valid)",
+					contentType:
+						"The content type of this mimetype. (if valid)",
+				},
 			},
 			{
 				route: "/modules",
 				method: "GET",
 				description: "Get all file conversion modules.",
+				response: {
+					modules: "An array of module information.",
+				},
 			},
 			{
 				route: "/convert",
@@ -46,6 +60,21 @@ export const help = (req, res) => {
 						files: "The file(s) to convert.",
 						to: "A valid mimetype to convert the files to.",
 					},
+				},
+				response:
+					'A data stream that should be saved as a ".zip" file.',
+			},
+			{
+				route: "/stats",
+				method: "GET",
+				description: "Get file conversion statistics.",
+				response: {
+					initialization:
+						"When this file converter instance was initialized, in number of milliseconds elapsed since the epoch.",
+					filesConverted:
+						"The number of files that have been converted since the converter was initialized",
+					dataConverted:
+						"The total amount of data that has been converted since the converter was initialized, in megabytes.",
 				},
 			},
 		],
