@@ -31,8 +31,9 @@ export default class Job {
 			_id,
 			status,
 			module: { label: module },
+			files: { length: totalFiles },
 		} = this;
-		return { _id, status, module };
+		return { _id, status: { ...status, totalFiles }, module };
 	}
 
 	/**

@@ -1,5 +1,5 @@
 import express from "express";
-import fs from "fs";
+import fs from "fs-extra";
 
 import helpRoutes from "./routes/helpRoutes.js";
 import modulesRoutes from "./routes/modulesRoutes.js";
@@ -22,7 +22,7 @@ export default class FileConverter {
 	 * @param {number} config.fileSizeLimit A recommended (optional) limit for the total size of all files uploaded to the converter per request, in bytes.
 	 * @param {string} config.temp An optional path to a directory for temporary file storage. Defaults to `"temp/"` in the local directory. Files are removed from this folder after they are converted.
 	 */
-	constructor(config = { modules: [] }) {
+	constructor(config = {}) {
 		try {
 			this.jobs = [];
 			this.modules = Modules;
@@ -32,53 +32,51 @@ export default class FileConverter {
 				dataConverted: 0,
 			};
 
-			if (config) {
-				if (config.modules) {
-					if (!(config.modules instanceof Array))
+			if (config.modules) {
+				if (!(config.modules instanceof Array))
+					throw new SyntaxError(
+						`Invalid "modules" value provided in FileConverter config. Expected an array.`
+					);
+
+				for (const module of config.modules)
+					if (!(module instanceof Module))
 						throw new SyntaxError(
-							`Invalid "modules" value provided in FileConverter config. Expected an array.`
+							`All objects passed in config.modules array must be an instance of "Module".`
 						);
 
-					for (const module of config.modules)
-						if (!(module instanceof Module))
-							throw new SyntaxError(
-								`All objects passed in config.modules array must be an instance of "Module".`
-							);
+				this.modules = [...this.modules, ...config.modules];
+			}
 
-					this.modules = [...this.modules, ...config.modules];
-				}
+			if (config.fileSizeLimit) {
+				if (
+					typeof config.fileSizeLimit !== "number" ||
+					config.fileSizeLimit < 0
+				)
+					throw new SyntaxError(
+						`Invalid 'fileSizeLimit' value provided to FileConverter constructor config.`
+					);
 
-				if (config.fileSizeLimit) {
-					if (
-						typeof config.fileSizeLimit !== "number" ||
-						config.fileSizeLimit < 0
-					)
-						throw new SyntaxError(
-							`Invalid 'fileSizeLimit' value provided to FileConverter constructor config.`
-						);
+				this.fileSizeLimit = config.fileSizeLimit;
+			}
 
-					this.fileSizeLimit = config.fileSizeLimit;
-				}
+			if (config.temp) {
+				if (typeof config.temp !== "string")
+					throw new Error(
+						`Invalid 'temp' value provided to FileConverter constructor config. Expected a string of a directory path.`
+					);
 
-				if (config.temp) {
-					if (typeof config.temp !== "string")
+				if (fs.existsSync(config.temp)) {
+					const stats = fs.lstatSync(config.temp);
+
+					if (!stats.isDirectory())
 						throw new Error(
-							`Invalid 'temp' value provided to FileConverter constructor config. Expected a string of a directory path.`
+							`The path ${config.temp} is not a directory.`
 						);
-
-					if (fs.existsSync(config.temp)) {
-						const stats = fs.lstatSync(config.temp);
-
-						if (!stats.isDirectory())
-							throw new Error(
-								`The path ${config.temp} is not a directory.`
-							);
-					}
-
-					this.temp = config.temp;
-				} else {
-					this.temp = "temp/";
 				}
+
+				this.temp = config.temp;
+			} else {
+				this.temp = "temp/";
 			}
 
 			let overlap = [];
@@ -91,10 +89,16 @@ export default class FileConverter {
 
 				overlap.push(module.label);
 			}
+
+			this.__clearCache();
 		} catch (err) {
 			console.error(err);
 			process.exit(1);
 		}
+	}
+
+	__clearCache() {
+		fs.removeSync(this.temp);
 	}
 
 	/**

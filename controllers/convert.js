@@ -16,9 +16,7 @@ export const convert = async (req, res) => {
 		body: { module },
 	} = req;
 
-	const unlinkAndGo = async (go) => {
-		const { files } = req;
-
+	const unlinkAndGo = async (files, go) => {
 		if (files && files.files && files.files instanceof Array)
 			for (const { path } of files.files) await fs.unlink(path);
 
@@ -27,7 +25,7 @@ export const convert = async (req, res) => {
 
 	try {
 		if (!req.files)
-			return await unlinkAndGo(() =>
+			return await unlinkAndGo(req.files, () =>
 				res
 					.status(400)
 					.send("No 'files' field provided in request FormData.")
@@ -38,12 +36,12 @@ export const convert = async (req, res) => {
 		} = req;
 
 		if (!module)
-			return await unlinkAndGo(() =>
+			return await unlinkAndGo(req.files, () =>
 				res.status(400).send("No 'module' value provided in request.")
 			);
 
 		if (typeof module !== "string")
-			return await unlinkAndGo(() =>
+			return await unlinkAndGo(req.files, () =>
 				res
 					.status(400)
 					.send(
@@ -54,7 +52,7 @@ export const convert = async (req, res) => {
 		const moduleObject = modules.find(({ label }) => label === module);
 
 		if (!moduleObject)
-			return await unlinkAndGo(() =>
+			return await unlinkAndGo(req.files, () =>
 				res
 					.status(400)
 					.send(
@@ -63,14 +61,14 @@ export const convert = async (req, res) => {
 			);
 
 		if (!files)
-			return await unlinkAndGo(() =>
+			return await unlinkAndGo(req.files, () =>
 				res
 					.status(400)
 					.send("No 'files' field provided in request FormData.")
 			);
 
 		if (!(files instanceof Array))
-			return await unlinkAndGo(() =>
+			return await unlinkAndGo(req.files, () =>
 				res
 					.status(400)
 					.send(
@@ -80,7 +78,7 @@ export const convert = async (req, res) => {
 
 		for (const { mimetype } of files)
 			if (!moduleObject.convertsFrom(mimetype))
-				return await unlinkAndGo(() =>
+				return await unlinkAndGo(req.files, () =>
 					res
 						.status(400)
 						.send(
@@ -88,44 +86,13 @@ export const convert = async (req, res) => {
 						)
 				);
 
-		// res.setHeader(
-		// 	"Content-Disposition",
-		// 	`attachment; filename=Converted_Files_${new Date()
-		// 		.toISOString()
-		// 		.replace(/:/g, "-")
-		// 		.replace("T", "@")}.zip`
-		// );
-		// res.setHeader("Content-Type", "application/zip");
-
-		// const zip = archiver("zip", { zlib: { level: 9 } });
-		// zip.pipe(res);
-
-		res.setHeader("Content-Type", "application/json");
-
 		const job = fileConverter.__createJob(files, moduleObject);
 
-		await job.run((status) => {
-			res.write(JSON.stringify({ ...status, jobId: job._id }));
-		});
+		job.run(); // Start the job asynchronously without awaiting it.
 
-		res.end();
-
-		// return res.status(200).send({ jobId: job._id });
-
-		// await moduleObject.convert(
-		// 	files,
-		// 	({ size }, { path, originalname }) => {
-		// 		fileConverter.stats.dataConverted += size / 1e6;
-		// 		fileConverter.stats.filesConverted++;
-		// 		zip.file(path, { name: originalname }); // Add the file to the zip.
-		// 	}
-		// ); // Convert all files.
-
-		// await zip.finalize();
-
-		// await unlinkAndGo();
+		return res.status(200).send({ jobId: job._id });
 	} catch (err) {
-		return await unlinkAndGo(() => handleError(res, err));
+		return await unlinkAndGo(req.files, () => handleError(res, err));
 	}
 };
 
@@ -158,6 +125,17 @@ export const download = async (req, res) => {
 				.status(503)
 				.send("This conversion job is not finished. Try again later.");
 
+		for (const { path } of job.files) {
+			const exists = await fs.exists(path);
+
+			if (!exists)
+				return res
+					.status(500)
+					.send(
+						"Attempted to zip and send files, but it appears a file was deleted before the zip was created."
+					);
+		}
+
 		res.setHeader(
 			"Content-Disposition",
 			`attachment; filename=Converted_Files_${new Date()
@@ -182,6 +160,6 @@ export const download = async (req, res) => {
 			({ _id }) => _id !== jobId
 		); // Remove the job.
 	} catch (err) {
-		return await unlinkAndGo(() => handleError(res, err));
+		return await handleError(res, err);
 	}
 };

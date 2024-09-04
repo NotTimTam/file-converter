@@ -58,11 +58,12 @@ export const help = (req, res) => {
 				body: {
 					FormData: {
 						files: "The file(s) to convert.",
-						to: "A valid mimetype to convert the files to.",
+						module: "The label of the module to convert the files with.",
 					},
 				},
-				response:
-					"A data stream indicating the conversion status and the ID of the job to later download the data.",
+				response: {
+					jobId: "The ID of the job in which these files are being processed.",
+				},
 			},
 			{
 				route: "/convert/download/:jobId",
