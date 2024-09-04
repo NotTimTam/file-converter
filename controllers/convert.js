@@ -7,7 +7,7 @@ import archiver from "archiver";
  *
  * Method: POST
  *
- * Convert a file from one type to another.
+ * Convert files from one type to another.
  */
 export const convert = async (req, res) => {
 	const {
@@ -88,6 +88,76 @@ export const convert = async (req, res) => {
 						)
 				);
 
+		// res.setHeader(
+		// 	"Content-Disposition",
+		// 	`attachment; filename=Converted_Files_${new Date()
+		// 		.toISOString()
+		// 		.replace(/:/g, "-")
+		// 		.replace("T", "@")}.zip`
+		// );
+		// res.setHeader("Content-Type", "application/zip");
+
+		// const zip = archiver("zip", { zlib: { level: 9 } });
+		// zip.pipe(res);
+
+		res.setHeader("Content-Type", "application/json");
+
+		const job = fileConverter.__createJob(files, moduleObject);
+
+		await job.run((status) => {
+			res.write(JSON.stringify({ ...status, jobId: job._id }));
+		});
+
+		res.end();
+
+		// return res.status(200).send({ jobId: job._id });
+
+		// await moduleObject.convert(
+		// 	files,
+		// 	({ size }, { path, originalname }) => {
+		// 		fileConverter.stats.dataConverted += size / 1e6;
+		// 		fileConverter.stats.filesConverted++;
+		// 		zip.file(path, { name: originalname }); // Add the file to the zip.
+		// 	}
+		// ); // Convert all files.
+
+		// await zip.finalize();
+
+		// await unlinkAndGo();
+	} catch (err) {
+		return await unlinkAndGo(() => handleError(res, err));
+	}
+};
+
+/**
+ * DOWNLOAD
+ *
+ * Method: GET
+ *
+ * Get all converted files for a job.
+ *
+ * req.params { jobId }
+ */
+export const download = async (req, res) => {
+	const {
+		fileConverter,
+		params: { jobId },
+	} = req;
+
+	try {
+		if (!jobId)
+			return res.status(400).send('No "jobId" param provided to route.');
+
+		const job = fileConverter.__getJob(jobId);
+
+		if (!job)
+			return res.status(404).send(`No job found with ID "${jobId}".`);
+
+		if (!job.status.step === "done")
+			return res
+				.status(503)
+				.send("This conversion job is not finished. Try again later.");
+
 		res.setHeader(
 			"Content-Disposition",
 			`attachment; filename=Converted_Files_${new Date()
@@ -100,117 +170,17 @@ export const convert = async (req, res) => {
 		const zip = archiver("zip", { zlib: { level: 9 } });
 		zip.pipe(res);
 
-		await moduleObject.convert(
-			files,
-			({ size }, { path, originalname }) => {
-				fileConverter.stats.dataConverted += size / 1e6;
-				fileConverter.stats.filesConverted++;
-				zip.file(path, { name: originalname }); // Add the file to the zip.
-			}
-		); // Convert all files.
+		for (const { path, originalname } of job.files) {
+			zip.file(path, { name: originalname }); // Add the file to the zip.
+		}
 
 		await zip.finalize();
 
-		await unlinkAndGo();
-	} catch (err) {
-		return await unlinkAndGo(() => handleError(res, err));
-	}
-};
+		for (const { path } of job.files) await fs.unlink(path);
 
-export const convertOld = async (req, res) => {
-	const {
-		fileConverter: { modules },
-		body: { module },
-	} = req;
-
-	let { files } = req;
-
-	const unlinkAndGo = async (go) => {
-		const { files } = req;
-
-		if (files && files.files && files.files instanceof Array)
-			for (const { path } of files.files) await fs.unlink(path);
-
-		if (go) await go();
-	};
-
-	try {
-		if (!module)
-			return await unlinkAndGo(() =>
-				res.status(400).send("No 'module' value provided in request.")
-			);
-
-		if (typeof module !== "string")
-			return await unlinkAndGo(() =>
-				res
-					.status(400)
-					.send(
-						`Invalid 'module' value provided in request: "${module}".`
-					)
-			);
-
-		const moduleObject = modules.find(({ label }) => label === module);
-
-		if (!moduleObject)
-			return await unlinkAndGo(() =>
-				res
-					.status(400)
-					.send(
-						`No file conversion module exists with label "${module}".`
-					)
-			);
-
-		if (!files || !files.files)
-			return await unlinkAndGo(() =>
-				res.status(400).send("No 'files' array provided in request.")
-			);
-
-		files = files.files;
-
-		if (!(files instanceof Array))
-			return await unlinkAndGo(() =>
-				res
-					.status(400)
-					.send(
-						"Invalid 'files' value provided in request. Expected a FormData field containing files."
-					)
-			);
-
-		for (const { mimetype } of files)
-			if (!moduleObject.convertsFrom(mimetype))
-				return await unlinkAndGo(() =>
-					res
-						.status(400)
-						.send(
-							`This conversion module does not support mimetype: "${mimetype}". Supported mimetypes: ${moduleObject.from}`
-						)
-				);
-
-		try {
-			await moduleObject.convert(files); // Convert all files.
-
-			res.setHeader(
-				"Content-Disposition",
-				`attachment; filename=Converted_Files_${new Date()
-					.toISOString()
-					.replace(/:/g, "-")
-					.replace("T", "@")}.zip`
-			);
-			res.setHeader("Content-Type", "application/zip");
-
-			const zip = archiver("zip", { zlib: { level: 9 } });
-			zip.pipe(res);
-
-			for (const { path, originalname } of files) {
-				zip.file(path, { name: originalname });
-			}
-
-			await zip.finalize();
-
-			await unlinkAndGo();
-		} catch (err) {
-			throw err;
-		}
+		fileConverter.jobs = fileConverter.jobs.filter(
+			({ _id }) => _id !== jobId
+		); // Remove the job.
 	} catch (err) {
 		return await unlinkAndGo(() => handleError(res, err));
 	}

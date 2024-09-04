@@ -62,7 +62,30 @@ export const help = (req, res) => {
 					},
 				},
 				response:
-					'A data stream that should be saved as a ".zip" file.',
+					"A data stream indicating the conversion status and the ID of the job to later download the data.",
+			},
+			{
+				route: "/convert/download/:jobId",
+				method: "GET",
+				description: "Get converted files from a job.",
+				response:
+					'A data stream that should be downloaded as a ".zip" file.',
+			},
+			{
+				route: "/jobs",
+				method: "GET",
+				description: "Get all active jobs.",
+				response: {
+					jobs: "An array of the active jobs.",
+				},
+			},
+			{
+				route: "/jobs/:jobId",
+				method: "GET",
+				description: "Get an active job by its ID.",
+				response: {
+					job: "An object of the active job.",
+				},
 			},
 			{
 				route: "/stats",

@@ -1,11 +1,15 @@
 import express from "express";
+import fs from "fs";
+
 import helpRoutes from "./routes/helpRoutes.js";
 import modulesRoutes from "./routes/modulesRoutes.js";
 import mimeTypesRoutes from "./routes/mimeTypesRoutes.js";
+import jobsRoutes from "./routes/jobsRoutes.js";
 import convertRoutes from "./routes/convertRoutes.js";
+
 import Module from "./util/Module.js";
+import Job from "./util/Job.js";
 import Modules from "./modules/index.js";
-import fs from "fs";
 
 export { default as Module } from "./util/Module.js";
 
@@ -20,6 +24,7 @@ export default class FileConverter {
 	 */
 	constructor(config = { modules: [] }) {
 		try {
+			this.jobs = [];
 			this.modules = Modules;
 			this.stats = {
 				initialization: Date.now(),
@@ -93,6 +98,24 @@ export default class FileConverter {
 	}
 
 	/**
+	 * Get a job by its ID.
+	 * @param {string} jobId The ID of the job to get.
+	 * @returns {Job} The requested job.
+	 */
+	__getJob(jobId) {
+		return this.jobs.find(({ _id }) => _id === jobId);
+	}
+
+	/**
+	 * Start a conversion job.
+	 * @param {Array<*>} files An array of file objects to convert.
+	 * @param {Module} module The module to convert with.
+	 */
+	__createJob(files, module) {
+		return new Job(this, files, module);
+	}
+
+	/**
 	 * Get an express middleware function.
 	 *
 	 * Implement with:
@@ -117,6 +140,7 @@ export default class FileConverter {
 
 		router.use("/modules", modulesRoutes);
 		router.use("/mimetypes", mimeTypesRoutes);
+		router.use("/jobs", jobsRoutes);
 		router.use("/convert", convertRoutes);
 		router.get("/stats", (req, res) => res.status(200).json(this.stats));
 		router.use("/", helpRoutes);

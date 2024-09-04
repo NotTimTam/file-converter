@@ -2,9 +2,10 @@ import { Router } from "express";
 
 const router = Router();
 
-import { convert } from "../controllers/convert.js";
+import { convert, download } from "../controllers/convert.js";
 import uploadMiddleware from "../middleware/uploadMiddleware.js";
 
-router.get("/", uploadMiddleware, convert);
+router.post("/", uploadMiddleware, convert);
+router.get("/download/:jobId", download);
 
 export default router;
