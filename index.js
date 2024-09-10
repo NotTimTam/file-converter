@@ -9,7 +9,6 @@ import convertRoutes from "./routes/convertRoutes.js";
 
 import Module from "./util/Module.js";
 import Job from "./util/Job.js";
-import Modules from "./modules/index.js";
 
 export { default as Module } from "./util/Module.js";
 
@@ -27,7 +26,6 @@ export default class FileConverter {
 	constructor(config = {}) {
 		try {
 			this.jobs = [];
-			this.modules = Modules;
 			this.stats = {
 				initialization: Date.now(),
 				filesConverted: 0,
