@@ -4,7 +4,6 @@
 	"description": "A headless, self-hostable, open-source file conversion express middleware.",
 	"main": "index.js",
 	"type": "module",
-	"private": "true",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/NotTimTam/file-converter.git"
