@@ -2,6 +2,8 @@ import mime from "mime-types";
 import FileConverter from "../index.js";
 
 export default class Module {
+	static labelRegex = /^[A-Za-z0-9_]{1,32}$/;
+
 	/**
 	 * A file conversion module.
 	 * @param {*} config The module's configuration object.
@@ -30,10 +32,11 @@ export default class Module {
 			throw new SyntaxError(
 				`Expected a string value for Module constructor config.label.`
 			);
-		if (label.length > 64)
+		if (!Module.labelRegex.test(label)) {
 			throw new SyntaxError(
-				"Module labels cannot be longer than 32 characters."
+				"Module constructor config.label must be between 1 and 32 characters long and can only contain letters, numbers, and underscores. No spaces or special characters allowed."
 			);
+		}
 
 		if (description) {
 			if (typeof description !== "string")
