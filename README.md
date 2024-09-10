@@ -1,4 +1,4 @@
-# file-converter
+# @nottimtam/file-converter
 
 A headless, self-hostable, open-source file conversion express middleware.
 

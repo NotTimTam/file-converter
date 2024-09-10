@@ -1,6 +1,6 @@
 {
 	"name": "@nottimtam/file-converter",
-	"version": "1.1.13",
+	"version": "1.1.14",
 	"description": "A headless, self-hostable, open-source file conversion express middleware.",
 	"main": "index.js",
 	"type": "module",
