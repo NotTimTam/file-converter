@@ -6,7 +6,7 @@ A headless, self-hostable, open-source file conversion express middleware.
 
 This middleware can be extended with custom file conversion `Modules` for unique use cases.
 
-It does not ship o.o.t.b with any modules. Use [file-converter-core](https://github.com/NotTimTam/file-converter-core) for core conversion modules.
+It does not ship o.o.t.b with any modules. Use [file-converter-core](https://www.npmjs.com/package/@nottimtam/file-converter-core) for core conversion modules.
 
 ## GUI
 
