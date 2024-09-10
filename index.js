@@ -26,6 +26,7 @@ export default class FileConverter {
 	constructor(config = {}) {
 		try {
 			this.jobs = [];
+			this.modules = [];
 			this.stats = {
 				initialization: Date.now(),
 				filesConverted: 0,
@@ -44,7 +45,7 @@ export default class FileConverter {
 							`All objects passed in config.modules array must be an instance of "Module".`
 						);
 
-				this.modules = [...config.modules];
+				this.modules = config.modules;
 			}
 
 			if (config.fileSizeLimit) {
@@ -88,15 +89,17 @@ export default class FileConverter {
 
 			this.clearJobOnDownload = Boolean(config.clearJobOnDownload);
 
-			let overlap = [];
+			if (this.modules && this.modules.length > 0) {
+				let overlap = [];
 
-			for (const module of this.modules) {
-				if (overlap.includes(module.label))
-					throw new Error(
-						`Failed to load module as a module has already been loaded with the label "${module.label}".`
-					);
+				for (const module of this.modules) {
+					if (overlap.includes(module.label))
+						throw new Error(
+							`Failed to load module as a module has already been loaded with the label "${module.label}".`
+						);
 
-				overlap.push(module.label);
+					overlap.push(module.label);
+				}
 			}
 
 			this.__clearCache();
