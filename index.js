@@ -44,7 +44,7 @@ export default class FileConverter {
 							`All objects passed in config.modules array must be an instance of "Module".`
 						);
 
-				this.modules = [...this.modules, ...config.modules];
+				this.modules = [...config.modules];
 			}
 
 			if (config.fileSizeLimit) {
