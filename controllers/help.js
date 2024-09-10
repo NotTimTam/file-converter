@@ -81,12 +81,24 @@ export const help = (req, res) => {
 				},
 			},
 			{
+				route: "/jobs",
+				method: "DELETE",
+				description: "Delete all inactive jobs.",
+				note: `Jobs are deleted automatically after download, unless the "FileConverter" constructor's configuration "clearJobOnDownload" value is set to false.`,
+			},
+			{
 				route: "/jobs/:jobId",
 				method: "GET",
 				description: "Get an active job by its ID.",
 				response: {
 					job: "An object of the active job.",
 				},
+			},
+			{
+				route: "/jobs/:jobId",
+				method: "DELETE",
+				description: "Delete an inactive job by its ID.",
+				note: `Jobs are deleted automatically after download, unless the "FileConverter" constructor's configuration "clearJobOnDownload" value is set to false.`,
 			},
 			{
 				route: "/stats",

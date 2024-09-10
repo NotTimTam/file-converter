@@ -120,7 +120,7 @@ export const download = async (req, res) => {
 		if (!job)
 			return res.status(404).send(`No job found with ID "${jobId}".`);
 
-		if (!job.status.step === "done")
+		if (job.status.step !== "done")
 			return res
 				.status(503)
 				.send("This conversion job is not finished. Try again later.");
@@ -154,11 +154,15 @@ export const download = async (req, res) => {
 
 		await zip.finalize();
 
-		for (const { path } of job.files) await fs.unlink(path);
+		if (fileConverter.clearJobOnDownload) {
+			// Remove the files.
+			for (const { path } of job.files) await fs.unlink(path);
 
-		fileConverter.jobs = fileConverter.jobs.filter(
-			({ _id }) => _id !== jobId
-		); // Remove the job.
+			// Remove the job.
+			fileConverter.jobs = fileConverter.jobs.filter(
+				({ _id }) => _id !== jobId
+			);
+		}
 	} catch (err) {
 		return await handleError(res, err);
 	}

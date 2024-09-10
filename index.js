@@ -17,10 +17,12 @@ export default class FileConverter {
 	/**
 	 * A FileConverter instance.
 	 *
-	 * @param {*} config Constructor configuration data.
+	 * @param {Object} config Constructor configuration data.
 	 * @param {Array<Module>} config.modules Additional modules to expand the converter's functionality.
 	 * @param {number} config.fileSizeLimit A recommended (optional) limit for the total size of all files uploaded to the converter per request, in bytes.
 	 * @param {string} config.temp An optional path to a directory for temporary file storage. Defaults to `"temp/"` in the local directory. Files are removed from this folder after they are converted.
+	 * @param {boolean} config.clearJobOnDownload (default `true`) Auto-delete conversion jobs and their associated files after an api request has been made successfully to download the converted files.
+	 * @param {boolean} config.DANGEROUSLYforceClearTemp (default `false`) Clear the content of the selected `temp` directory on initialization. ***This WILL delete all files in the directory indiscriminately.*** When `false`, the constructor will throw an error if the directory is not empty.
 	 */
 	constructor(config = {}) {
 		try {
@@ -70,7 +72,14 @@ export default class FileConverter {
 
 					if (!stats.isDirectory())
 						throw new Error(
-							`The path ${config.temp} is not a directory.`
+							`The path "${config.temp}" is not a directory.`
+						);
+
+					const { length: contents } = fs.readdirSync(config.temp);
+
+					if (contents > 0 && !config.DANGEROUSLYforceClearTemp)
+						throw new Error(
+							`The directory at "${config.temp}" is not empty! The file conversion temp directory must be empty upon initialization.`
 						);
 				}
 
@@ -78,6 +87,8 @@ export default class FileConverter {
 			} else {
 				this.temp = "temp/";
 			}
+
+			this.clearJobOnDownload = Boolean(config.clearJobOnDownload);
 
 			let overlap = [];
 
