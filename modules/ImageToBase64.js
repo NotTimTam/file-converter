@@ -3,7 +3,7 @@ import fs from "fs-extra";
 
 const ImageToBase64 = new Module({
 	label: "ImageToBase64",
-	description: "Convert plaintext files to plaintext files.",
+	description: "Convert image files to plaintext files.",
 	from: ["image/jpeg", "image/png"],
 	to: "text/plain",
 	method: async ({ path }) => {
