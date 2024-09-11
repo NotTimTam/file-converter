@@ -59,6 +59,8 @@ export const help = (req, res) => {
 					FormData: {
 						files: "The file(s) to convert.",
 						module: "The label of the module to convert the files with.",
+						options:
+							'A stringified JSON object containing data for the selected Module\'s "options" configuration. The keys in the object should be each "Option"\'s label, and the value should be a proper format string, number, or boolean. (or null when permitted)',
 					},
 				},
 				response: {

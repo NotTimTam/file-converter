@@ -1,17 +1,82 @@
 import mime from "mime-types";
 import FileConverter from "../index.js";
+import { v4 as uuid } from "uuid";
 
+/**
+ * `new Module.Option(<config>)`
+ */
+class Option {
+	/**
+	 * Valid values for `config.type`.
+	 */
+	static typeEnum = ["string", "number", "boolean"];
+
+	/**
+	 * An option is an input a user can provide to configure how a set of files should be converted.
+	 * @param {Object} config The option's configuration object.
+	 * @param {string} config.label The option's identifying label.
+	 * @param {string} config.description An optional option description.
+	 * @param {"string"|"number"|"boolean"} config.type The option's input type.
+	 * @param {function} config.validateInput An asynchronous callback function, used to validate the value provided to this option, which is passed as the first and only parameter. Should throw an exception if the value is invalid.
+	 */
+	constructor(config = {}) {
+		if (!config.validateInput || typeof config.validateInput !== "function")
+			throw new SyntaxError(
+				`"validateInput" value provided to Module.Option constructor is not a callback function.`
+			);
+
+		if (!Module.labelRegex.test(config.label)) {
+			throw new SyntaxError(
+				"Module.Option constructor config.label must be between 1 and 32 characters long and can only contain letters, numbers, and underscores. No spaces or special characters allowed."
+			);
+		}
+
+		if (!config.type || !Option.typeEnum.includes(config.type))
+			throw new SyntaxError(
+				'Module.Option constructor config.type is invalid. Must be one of: "string", "number", "boolean".'
+			);
+
+		if (config.description) {
+			if (
+				typeof config.description !== "string" ||
+				config.description.length > 128
+			)
+				throw new SyntaxError(
+					"Expected a 32 (or less) character string for Module.Option constructor config.description value."
+				);
+			this.description = config.description;
+		}
+
+		this.label = config.label;
+		this.validateInput = config.validateInput;
+		this.type = config.type;
+
+		this._id = uuid();
+	}
+}
+
+/**
+ * `new Module(<config>)`
+ */
 export default class Module {
+	static Option = Option;
+
+	/**
+	 * Regex for validating `Option` and `Module` labels.
+	 */
 	static labelRegex = /^[A-Za-z0-9_]{1,32}$/;
 
 	/**
 	 * A file conversion module.
-	 * @param {*} config The module's configuration object.
+	 * @param {Object} config The module's configuration object.
 	 * @param {string|Array<string>} config.from The mimetype to convert from. Can be an array of supported mimetypes.
 	 * @param {string} config.to The mimetype to convert to.
+	 * @param {Array<Module.Option>} config.options An array of options for conversion.
 	 * @param {string} config.label A unique label for this module.
 	 * @param {string} config.description Optional detailed description for module.
-	 * @param {function} config.method An asynchronous callback, that accepts a file object, and converts that file's content, storing the converted data in the file at the provided `path` value.
+	 * @param {function} config.method `async function myMethod(file, options) {}` An asynchronous callback, that accepts a file object, and converts that file's content, storing the converted data in the file at the provided `path` value.
+	 *
+	 * A second `options` object is passed to the function containing the responses to any configured Module options.
 	 * @param {boolean} config.customReturn By default, a `Module`'s `convert` method will change the file data to match the conversion that takes place.
 	 * Setting this value to `true` will make it so that the `method` callback must return the "file" data passed to it,
 	 * with any necessary changes made, such as changing the file extension in the `originalname` parameter,
@@ -26,7 +91,8 @@ export default class Module {
 		if (!config)
 			throw new Error("No config provided to Module constructor.");
 
-		const { from, to, method, label, description, customReturn } = config;
+		const { from, to, method, label, description, customReturn, options } =
+			config;
 
 		if (!label || typeof label !== "string")
 			throw new SyntaxError(
@@ -97,11 +163,28 @@ export default class Module {
 				`(${label}) Expected an asynchronous callback function for Module constructor config.method value.`
 			);
 
+		if (options) {
+			if (!(options instanceof Array))
+				throw new SyntaxError(
+					`Expected an array of constructed "Module.Option" objects for Module constructor config.options value.`
+				);
+
+			for (const option of options)
+				if (!(option instanceof Module.Option))
+					throw new SyntaxError(
+						`Expected an array of constructed "Module.Option" objects for Module constructor config.options value.`
+					);
+
+			this.options = options;
+		}
+
 		this.from = from;
 		this.to = to;
 		this.method = method;
 		this.label = label;
 		this.customReturn = customReturn;
+
+		this._id = uuid();
 	}
 
 	/**
@@ -129,7 +212,7 @@ export default class Module {
 
 	/**
 	 * Validate a converted file object.
-	 * @param {*} file The file object to validate.
+	 * @param {Object} file The file object to validate.
 	 * @returns {string|boolean} `true` if the file object is valid, or a string that explains the reason why it isn't.
 	 */
 	validateConvertedFileObject = (file) => {
@@ -206,15 +289,16 @@ export default class Module {
 	 * Convert an array of files using the converter's method.
 	 * @param {Array<*>} files The array of files to convert.
 	 * @param {function} callback An optional asynchronous callback that is passed each file before/after it is converted. `(old, new)`
+	 *  @param {Object} options Optional options object configuration to pass to the module conversion job.
 	 * @returns {string} The path to a zip containing the converted files.
 	 */
-	async convert(files, callback) {
+	async convert(files, callback, options) {
 		const { label, customReturn } = this;
 
 		files = await Promise.all(
 			files.map(async (file) => {
 				const old = JSON.stringify(file);
-				const newFile = await this.method(file);
+				const newFile = await this.method(file, options);
 
 				// If the method callback does return file data.
 				if (newFile) {

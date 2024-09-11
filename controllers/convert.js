@@ -13,7 +13,7 @@ export const convert = async (req, res) => {
 	const {
 		fileConverter,
 		fileConverter: { modules },
-		body: { module },
+		body: { module, options },
 	} = req;
 
 	const unlinkAndGo = async (files, go) => {
@@ -86,9 +86,11 @@ export const convert = async (req, res) => {
 						)
 				);
 
+		const parsedOptions = options && JSON.parse(parsedOptions);
+
 		const job = fileConverter.__createJob(files, moduleObject);
 
-		job.run(); // Start the job asynchronously without awaiting it.
+		job.run(parsedOptions); // Start the job asynchronously without awaiting it.
 
 		return res.status(200).send({ jobId: job._id });
 	} catch (err) {

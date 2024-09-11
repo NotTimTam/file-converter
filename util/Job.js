@@ -44,21 +44,26 @@ export default class Job {
 
 	/**
 	 * Run the job.
+	 * @param {Object} options Optional options object configuration to pass to the module conversion job.
 	 * @param {function} onStep An optional asynchronous callback to run when each step of the job is complete.
 	 */
-	async run(onStep) {
+	async run(options, onStep) {
 		this.status.step = "running";
 
 		const { files, module, fileConverter } = this;
 
-		await module.convert(files, async ({ size }, newFile) => {
-			fileConverter.stats.dataConverted += size / 1e6;
-			fileConverter.stats.filesConverted++;
-			this.status.filesConverted++;
+		await module.convert(
+			files,
+			async ({ size }, newFile) => {
+				fileConverter.stats.dataConverted += size / 1e6;
+				fileConverter.stats.filesConverted++;
+				this.status.filesConverted++;
 
-			if (onStep && typeof onStep === "function")
-				await onStep(this.status);
-		});
+				if (onStep && typeof onStep === "function")
+					await onStep(this.status);
+			},
+			options
+		);
 
 		this.status.step = "done";
 	}

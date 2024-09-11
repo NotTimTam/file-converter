@@ -20,6 +20,7 @@ const uploadMiddleware = async (req, res, next) => {
 		const upload = multer(multerConfig).fields([
 			{ name: "files" },
 			{ name: "module" },
+			{ name: "options" },
 		]);
 
 		upload(req, res, (err) => {

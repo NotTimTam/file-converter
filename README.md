@@ -91,6 +91,7 @@ Create a new file conversion module.
     -   **label**: `string` - A unique label for this module.
     -   **description**: `string` (optional) - A detailed description for the module.
     -   **method**: `function` - An asynchronous callback that accepts a file object and converts that file's content, storing the converted data in the file at the provided `path` value.
+    -   **options**: `Array<Module.Option>` An array of options for conversion.
     -   **customReturn**: `boolean` (optional) - By default, a `Module`'s `convert` method will change the file data to match the conversion. Setting this to `true` makes the `method` callback return the "file" data passed to it, with necessary changes (e.g., changing file extension in `originalname`). This also stops the `Module` from throwing errors if the `to`/`from` mimetype values are invalid, allowing custom file types to be used.
 
 ### Methods
@@ -131,6 +132,26 @@ Convert an array of files using the module's conversion method.
 ##### Returns
 
 -   `string`: The path to a zip file containing the converted files.
+
+---
+
+## Module Options
+
+```js
+import { Module } from "@nottimtam/file-converter";
+```
+
+#### `new Module.Option(config)`
+
+Create a new module `Option`.
+
+##### Parameters
+
+-   **config**: An object containing configuration data.
+    -   **label**: `string` - A unique label for this option.
+    -   **description**: `string` (optional) - A detailed description for the option.
+    -   **type**: `"string"|"number"|"boolean"` - The option's input type.
+    -   **validateInput**: `function` - An asynchronous callback function, used to validate the value provided to this option, which is passed as the first and only parameter. Should throw an exception if the value is invalid.
 
 ---
 
@@ -214,6 +235,7 @@ Convert file(s) from one filetype to another.
 -   **FormData**:
     -   **files**: The file(s) to convert.
     -   **module**: The label of the module to convert the files with.
+    -   **options** A stringified JSON object containing data for the selected Module's `config.options` configuration. The keys in the object should be each `Option`'s label, and the value should be a proper format `string`, `number`, or `boolean`. (or `null` when permitted)
 
 ##### Example Response
 

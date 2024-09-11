@@ -12,6 +12,9 @@ import Job from "./util/Job.js";
 
 export { default as Module } from "./util/Module.js";
 
+/**
+ * `new FileConverter(<config>)`
+ */
 export default class FileConverter {
 	/**
 	 * A FileConverter instance.
