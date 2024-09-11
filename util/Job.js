@@ -2,7 +2,7 @@ import { v4 as uuid } from "uuid";
 import Module from "./Module.js";
 
 export default class Job {
-	constructor(fileConverter, files, module) {
+	constructor(fileConverter, files, module, options) {
 		this.fileConverter = fileConverter;
 
 		this.fileConverter.jobs.push(this);
@@ -11,6 +11,7 @@ export default class Job {
 
 		this.files = files;
 		this.module = module;
+		this.options = options;
 
 		if (!module instanceof Module)
 			throw new Error(
@@ -44,13 +45,12 @@ export default class Job {
 
 	/**
 	 * Run the job.
-	 * @param {Object} options Optional options object configuration to pass to the module conversion job.
 	 * @param {function} onStep An optional asynchronous callback to run when each step of the job is complete.
 	 */
-	async run(options, onStep) {
+	async run(onStep) {
 		this.status.step = "running";
 
-		const { files, module, fileConverter } = this;
+		const { files, module, fileConverter, options } = this;
 
 		await module.convert(
 			files,

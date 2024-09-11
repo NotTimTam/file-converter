@@ -88,28 +88,30 @@ export const convert = async (req, res) => {
 
 		const parsedOptions = options && JSON.parse(parsedOptions);
 
-		for (const [option, value] of Object.entries(parsedOptions)) {
-			const optionInModule = moduleObject.options.find(
-				({ label }) => label === option
-			);
+		if (parsedOptions) {
+			for (const [option, value] of Object.entries(parsedOptions)) {
+				const optionInModule = moduleObject.options.find(
+					({ label }) => label === option
+				);
 
-			if (!optionInModule)
-				return res
-					.status(400)
-					.send(
-						`The "${moduleObject.label}" module does not have an option with label "${option}".`
-					);
+				if (!optionInModule)
+					return res
+						.status(400)
+						.send(
+							`The "${moduleObject.label}" module does not have an option with label "${option}".`
+						);
 
-			try {
-				await optionInModule.validateInput(value);
-			} catch (err) {
-				return res.status(400).send(err)
+				try {
+					await optionInModule.validateInput(value);
+				} catch (err) {
+					return res.status(400).send(err);
+				}
 			}
 		}
 
-		const job = fileConverter.__createJob(files, moduleObject);
+		const job = fileConverter.createJob(files, moduleObject, parsedOptions);
 
-		job.run(parsedOptions); // Start the job asynchronously without awaiting it.
+		job.run(); // Start the job asynchronously without awaiting it.
 
 		return res.status(200).send({ jobId: job._id });
 	} catch (err) {

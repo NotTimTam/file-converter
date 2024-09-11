@@ -129,9 +129,10 @@ export default class FileConverter {
 	 * Start a conversion job.
 	 * @param {Array<*>} files An array of file objects to convert.
 	 * @param {Module} module The module to convert with.
+	 * @param {Object} options Optional options object configuration to pass to the module conversion job.
 	 */
-	__createJob(files, module) {
-		return new Job(this, files, module);
+	createJob(files, module, options) {
+		return new Job(this, files, module, options);
 	}
 
 	/**

@@ -18,6 +18,7 @@ class Option {
 	 * @param {string} config.description An optional option description.
 	 * @param {"string"|"number"|"boolean"} config.type The option's input type.
 	 * @param {function} config.validateInput An asynchronous callback function, used to validate the value provided to this option, which is passed as the first and only parameter. Should throw an exception if the value is invalid.
+	 * @param {Object}
 	 */
 	constructor(config = {}) {
 		if (!config.validateInput || typeof config.validateInput !== "function")
