@@ -93,8 +93,8 @@ export const convert = async (req, res) => {
 			if (
 				required &&
 				(!parsedOptions.hasOwnProperty(label) ||
-					parsedOptions[label] !== undefined ||
-					parsedOptions[label] !== null)
+					parsedOptions[label] === undefined ||
+					parsedOptions[label] === null)
 			)
 				return res
 					.status(400)
