@@ -46,6 +46,30 @@ export default class Job {
 	}
 
 	/**
+	 * If an option value is not provided, but the `Option` has a default value configured, we populate in the default value.
+	 * @param {Object} options Optional options object configuration to pass to the module conversion job.
+	 * @returns {Object} The populated options.
+	 */
+	__populateOptions(options) {
+		return Object.fromEntries(
+			Object.entries(options).map(([name, value]) => {
+				// Find default value.
+				const option =
+					this.module &&
+					this.module.options.find(({ label }) => label === name);
+				const defaultValue = option && option.default;
+
+				// Populate default value when no value is provided.
+				if ((value === undefined || value === null) && defaultValue)
+					return [name, defaultValue];
+
+				// Return unpopulated value otherwise.
+				return [name, value];
+			})
+		);
+	}
+
+	/**
 	 * Run the job.
 	 * @param {function} onStep An optional asynchronous callback to run when each step of the job is complete.
 	 */

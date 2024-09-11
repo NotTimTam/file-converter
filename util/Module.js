@@ -200,30 +200,6 @@ export default class Module {
 	}
 
 	/**
-	 * If an option value is not provided, but the `Option` has a default value configured, we populate in the default value.
-	 * @param {Object} options Optional options object configuration to pass to the module conversion job.
-	 * @returns {Object} The populated options.
-	 */
-	__populateOptions(options) {
-		return Object.fromEntries(
-			Object.entries(options).map(([name, value]) => {
-				// Find default value.
-				const option =
-					this.options &&
-					this.options.find(({ label }) => label === name);
-				const defaultValue = option && option.default;
-
-				// Populate default value when no value is provided.
-				if ((value === undefined || value === null) && defaultValue)
-					return [name, defaultValue];
-
-				// Return unpopulated value otherwise.
-				return [name, value];
-			})
-		);
-	}
-
-	/**
 	 * Get whether this module can convert files **from** a certain mimetype.
 	 * @param {string} mimetype The mimetype to check.
 	 * @returns {boolean} Whether or not the mimetype is supported.
@@ -330,7 +306,6 @@ export default class Module {
 	 */
 	async convert(files, callback, options) {
 		const { label, customReturn } = this;
-		if (options) options = this.__populateOptions(options);
 
 		files = await Promise.all(
 			files.map(async (file) => {
