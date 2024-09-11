@@ -86,7 +86,7 @@ export const convert = async (req, res) => {
 						)
 				);
 
-		const parsedOptions = options && JSON.parse(parsedOptions);
+		const parsedOptions = options && JSON.parse(options);
 
 		if (parsedOptions) {
 			for (const [option, value] of Object.entries(parsedOptions)) {
