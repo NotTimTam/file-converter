@@ -88,6 +88,21 @@ export const convert = async (req, res) => {
 
 		const parsedOptions = options && JSON.parse(options);
 
+		for (const { label, required } of moduleObject.options) {
+			// If a value is required, but none is provided
+			if (
+				required &&
+				(!parsedOptions.hasOwnProperty(label) ||
+					parsedOptions[label] !== undefined ||
+					parsedOptions[label] !== null)
+			)
+				return res
+					.status(400)
+					.send(
+						`The "${moduleObject.label}" module requires an option value for the "${label}", but none was provided.`
+					);
+		}
+
 		if (parsedOptions) {
 			for (const [option, value] of Object.entries(parsedOptions)) {
 				const optionInModule = moduleObject.options.find(
