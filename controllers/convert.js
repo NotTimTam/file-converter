@@ -99,7 +99,7 @@ export const convert = async (req, res) => {
 				return res
 					.status(400)
 					.send(
-						`The "${moduleObject.label}" module requires an option value for the "${label}", but none was provided.`
+						`The "${moduleObject.label}" module requires a value for the option "${label}", but none was provided.`
 					);
 		}
 
