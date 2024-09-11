@@ -60,7 +60,11 @@ export default class Job {
 				const defaultValue = option && option.default;
 
 				// Populate default value when no value is provided.
-				if ((value === undefined || value === null) && defaultValue)
+				if (
+					(value === undefined || value === null) &&
+					defaultValue !== undefined &&
+					defaultValue !== null
+				)
 					return [name, defaultValue];
 
 				// Return unpopulated value otherwise.
