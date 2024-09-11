@@ -151,6 +151,7 @@ Create a new module `Option`.
     -   **label**: `string` - A unique label for this option.
     -   **description**: `string` (optional) - A detailed description for the option.
     -   **type**: `"string"|"number"|"boolean"` - The option's input type.
+    -   **default**: `string|number|boolean` - (optional) The option's default value.
     -   **validateInput**: `function` - An asynchronous callback function, used to validate the value provided to this option, which is passed as the first and only parameter. Should throw an exception if the value is invalid.
 
 ---

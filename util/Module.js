@@ -17,6 +17,7 @@ class Option {
 	 * @param {string} config.label The option's identifying label.
 	 * @param {string} config.description An optional option description.
 	 * @param {"string"|"number"|"boolean"} config.type The option's input type.
+	 * @param {string|number|boolean} config.default (optional) The option's default value.
 	 * @param {function} config.validateInput An asynchronous callback function, used to validate the value provided to this option, which is passed as the first and only parameter. Should throw an exception if the value is invalid.
 	 * @param {Object}
 	 */
@@ -46,6 +47,14 @@ class Option {
 					"Expected a 32 (or less) character string for Module.Option constructor config.description value."
 				);
 			this.description = config.description;
+		}
+
+		if (config.default) {
+			if (!Option.typeEnum.includes(typeof config.default))
+				throw new SyntaxError(
+					`Module.Option constructor config.default is invalid. Must be of type string, number, boolean, or a nullish value.`
+				);
+			this.default = config.default;
 		}
 
 		this.label = config.label;
