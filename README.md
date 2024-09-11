@@ -152,6 +152,7 @@ Create a new module `Option`.
     -   **description**: `string` (optional) - A detailed description for the option.
     -   **type**: `"string"|"number"|"boolean"` - The option's input type.
     -   **default**: `string|number|boolean` - (optional) The option's default value.
+    -   **required**: `boolean` - (optional) Whether or not to require a value to be provided for this option. Default `false`, if `false`, the option's `validateInput` callback will not be run when no value is provided.
     -   **validateInput**: `function` - An asynchronous callback function, used to validate the value provided to this option, which is passed as the first and only parameter. Should throw an exception if the value is invalid.
 
 ---

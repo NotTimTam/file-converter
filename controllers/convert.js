@@ -101,16 +101,22 @@ export const convert = async (req, res) => {
 							`The "${moduleObject.label}" module does not have an option with label "${option}".`
 						);
 
-				try {
-					await optionInModule.validateInput(value);
-				} catch (err) {
-					return res
-						.status(400)
-						.send(
-							err instanceof Error
-								? err.message
-								: JSON.stringify(err)
-						);
+				// If the option is required, or it is provided, we run the validator.
+				if (
+					optionInModule.required ||
+					(value !== undefined && value !== null)
+				) {
+					try {
+						await optionInModule.validateInput(value);
+					} catch (err) {
+						return res
+							.status(400)
+							.send(
+								err instanceof Error
+									? err.message
+									: JSON.stringify(err)
+							);
+					}
 				}
 			}
 		}

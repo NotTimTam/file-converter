@@ -18,6 +18,7 @@ class Option {
 	 * @param {string} config.description An optional option description.
 	 * @param {"string"|"number"|"boolean"} config.type The option's input type.
 	 * @param {string|number|boolean} config.default (optional) The option's default value.
+	 *  @param {boolean} config.required (optional) Whether or not to require a value to be provided for this option. Default `false`, if `false`, the option's `validateInput` callback will not be run when no value is provided.
 	 * @param {function} config.validateInput An asynchronous callback function, used to validate the value provided to this option, which is passed as the first and only parameter. Should throw an exception if the value is invalid.
 	 * @param {Object}
 	 */
@@ -57,6 +58,7 @@ class Option {
 			this.default = config.default;
 		}
 
+		this.required = Boolean(config.required);
 		this.label = config.label;
 		this.validateInput = config.validateInput;
 		this.type = config.type;
