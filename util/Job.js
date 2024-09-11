@@ -56,7 +56,7 @@ export default class Job {
 
 		await module.convert(
 			files,
-			async ({ size }, newFile) => {
+			async ({ size }) => {
 				fileConverter.stats.dataConverted += size / 1e6;
 				fileConverter.stats.filesConverted++;
 				this.status.filesConverted++;
