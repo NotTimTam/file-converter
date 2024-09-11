@@ -104,7 +104,13 @@ export const convert = async (req, res) => {
 				try {
 					await optionInModule.validateInput(value);
 				} catch (err) {
-					return res.status(400).send(err);
+					return res
+						.status(400)
+						.send(
+							err instanceof Error
+								? err.message
+								: JSON.stringify(err)
+						);
 				}
 			}
 		}
