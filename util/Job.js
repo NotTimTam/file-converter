@@ -34,12 +34,14 @@ export default class Job {
 			module: { label: module },
 			files: { length: totalFiles },
 			fileConverter: { clearJobOnDownload },
+			options,
 		} = this;
 		return {
 			_id,
 			status: { ...status, totalFiles },
 			module,
 			unlimitedDownloads: !clearJobOnDownload,
+			options,
 		};
 	}
 
