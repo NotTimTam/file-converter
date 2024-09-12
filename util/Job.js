@@ -62,26 +62,21 @@ export default class Job {
 	 * @returns {Object} The populated options.
 	 */
 	__populateOptions(options) {
-		return Object.fromEntries(
-			Object.entries(options).map(([name, value]) => {
-				// Find default value.
-				const option =
-					this.module &&
-					this.module.options.find(({ label }) => label === name);
-				const defaultValue = option && option.default;
-
-				// Populate default value when no value is provided.
-				if (
-					(value === undefined || value === null) &&
-					defaultValue !== undefined &&
-					defaultValue !== null
+		// Get all default values.
+		const defaults = Object.fromEntries(
+			this.module.options
+				.filter(
+					({ default: defaultValue }) =>
+						defaultValue !== undefined && defaultValue !== null
 				)
-					return [name, defaultValue];
-
-				// Return unpopulated value otherwise.
-				return [name, value];
-			})
+				.map(({ default: defaultValue, label }) => [
+					label,
+					defaultValue,
+				])
 		);
+
+		// Filter in selected options.
+		return { ...defaults, ...options };
 	}
 
 	/**
