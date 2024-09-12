@@ -1,8 +1,24 @@
 import { v4 as uuid } from "uuid";
 import Module from "./Module.js";
+import FileConverter from "../index.js";
 
+/**
+ * `new Job(fileConverter, files, module, options)`
+ */
 export default class Job {
+	/**
+	 * A job utilizes a `Module` to convert and store files.
+	 * @param {FileConverter} fileConverter The `FileConverter` instance this job should be associated with.
+	 * @param {Array<Object>} files The multer file references for the files this job will convert.
+	 * @param {Module} module The module that will be used to convert this job's files.
+	 * @param {Object} options The request options configuration for the module.
+	 */
 	constructor(fileConverter, files, module, options) {
+		if (!module instanceof Module)
+			throw new Error(
+				`"module" value provided to Job constructor is not of type "Module".`
+			);
+
 		this.fileConverter = fileConverter;
 
 		this.fileConverter.jobs.push(this);
@@ -11,12 +27,7 @@ export default class Job {
 
 		this.files = files;
 		this.module = module;
-		this.options = options;
-
-		if (!module instanceof Module)
-			throw new Error(
-				`"module" value provided to Job constructor is not of type "Module".`
-			);
+		this.options = this.__populateOptions(options);
 
 		this.status = {
 			step: "pending",
