@@ -42,10 +42,10 @@ class Option {
 		if (config.description) {
 			if (
 				typeof config.description !== "string" ||
-				config.description.length > 128
+				config.description.length > 512
 			)
 				throw new SyntaxError(
-					"Expected a 32 (or less) character string for Module.Option constructor config.description value."
+					"Expected a 512 (or less) character string for Module.Option constructor config.description value."
 				);
 			this.description = config.description;
 		}
