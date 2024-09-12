@@ -48,7 +48,9 @@ app.listen(3000, (err) => {
 });
 ```
 
-## FileConverter Configuration
+# Usage
+
+## FileConverter
 
 ### Constructor
 
@@ -58,12 +60,32 @@ Create a new instance of the `FileConverter`.
 
 ##### Parameters
 
--   **config** (optional): An object containing configuration data.
+-   **config**: `Object` - An object containing configuration data.
     -   **modules**: `Array<Module>` - Additional modules to expand the converter's functionality.
     -   **fileSizeLimit**: `number` - A recommended (optional) limit for the total size of all files uploaded to the converter per request, in bytes.
     -   **temp**: `string` - An optional path to a directory for temporary file storage. Defaults to `"temp/"` in the local directory. Files are removed from this folder after they are converted.
     -   **clearJobOnDownload**: `boolean` - (default `true`) Auto-delete conversion jobs and their associated files after an api request has been made successfully to download the converted files.
     -   **DANGEROUSLYforceClearTemp**: `boolean` - (default `false`) Clear the content of the selected `temp` directory on initialization. **_This WILL delete all files in the directory indiscriminately._** When `false`, the constructor will throw an error if the directory is not empty.
+
+### Properties
+
+All permitted properties defined in the constructor's config parameter are passed through to the constructed object.
+
+#### `jobs`
+
+An array of the converter's active jobs.
+
+#### `modules`
+
+An array of the converter's loaded modules.
+
+#### `stats`
+
+An object containing stats about the instance.
+
+-   **initialization**: `number` Milliseconds since the epoch, generated with `Date.now()`.
+-   **filesConverted**: `number` The number of files converted.
+-   **dataConverted**: `number` The amount of data converted. (in megabytes)
 
 ### Methods
 
@@ -71,9 +93,22 @@ Create a new instance of the `FileConverter`.
 
 Get the file conversion express middleware function.
 
+#### `createJob(files, module, options)`
+
+Start a conversion job. This method is called by the express middleware to create file conversion jobs but could potentially be used in a custom environment.
+
+-   **files**: `Array<Object>` An array of file objects to convert. Should be a [multer file object](https://github.com/expressjs/multer?tab=readme-ov-file#file-information).
+-   **module**: `Module` The module to convert with.
+-   **options**: `Object` Optional options object configuration to pass to the module conversion job. Keys should be the label of each option configured in the module, and the values an appropriate value to set for that option.
+-   **options**: `Object` Optional options object configuration to pass to the module conversion job. Keys should be the label of each option configured in the module, and the values an appropriate value to set for that option.
+
+##### Returns
+
+-   `Job`: The created job.
+
 ---
 
-## Custom Conversion Modules
+## Module
 
 ```js
 import { Module } from "@nottimtam/file-converter";
@@ -85,7 +120,7 @@ Create a new file conversion module.
 
 ##### Parameters
 
--   **config**: An object containing configuration data.
+-   **config**: `Object` - An object containing configuration data.
     -   **from**: `string | Array<string>` - The mimetype to convert from. Can be a single mimetype or an array of supported mimetypes.
     -   **to**: `string` - The mimetype to convert to.
     -   **label**: `string` - A unique label for this module.
@@ -93,6 +128,14 @@ Create a new file conversion module.
     -   **method**: `function` - An asynchronous callback that accepts a file object and converts that file's content, storing the converted data in the file at the provided `path` value.
     -   **options**: `Array<Module.Option>` An array of options for conversion.
     -   **customReturn**: `boolean` (optional) - By default, a `Module`'s `convert` method will change the file data to match the conversion. Setting this to `true` makes the `method` callback return the "file" data passed to it, with necessary changes (e.g., changing file extension in `originalname`). This also stops the `Module` from throwing errors if the `to`/`from` mimetype values are invalid, allowing custom file types to be used.
+
+### Properties
+
+All permitted properties defined in the constructor's config parameter are passed through to the constructed object.
+
+#### `_id`
+
+The module's UUID.
 
 ### Methods
 
@@ -120,7 +163,7 @@ Check if this module can convert files to a certain mimetype.
 
 -   `boolean`: Whether the mimetype is supported.
 
-#### `convert(files, callback)`
+#### `async convert(files, callback)`
 
 Convert an array of files using the module's conversion method.
 
@@ -135,7 +178,7 @@ Convert an array of files using the module's conversion method.
 
 ---
 
-## Module Options
+## Module.Option
 
 ```js
 import { Module } from "@nottimtam/file-converter";
@@ -154,6 +197,60 @@ Create a new module `Option`.
     -   **default**: `string|number|boolean` - (optional) The option's default value.
     -   **required**: `boolean` - (optional) Whether or not to require a value to be provided for this option. Default `false`, if `false`, the option's `validateInput` callback will not be run when no value is provided.
     -   **validateInput**: `function` - An asynchronous callback function, used to validate the value provided to this option, which is passed as the first and only parameter. Should throw an exception if the value is invalid.
+
+### Properties
+
+All permitted properties defined in the constructor's config parameter are passed through to the constructed object.
+
+#### `_id`
+
+The option's UUID.
+
+---
+
+## Job
+
+Jobs are not directly exposed through an export. They are created automatically within the `new FileConverter().middleware()` method when a conversion request is made. They can also be created manually using [`new FileConverter().createJob()`](#createjobfiles-module-options).
+
+### Properties
+
+#### `_id`
+
+The job's UUID.
+
+#### `returnable`
+
+A specialized object that returns relevant Job data, useful for sending information about a job from a server to a client.
+
+#### `status`
+
+An object containing data on the status of the job.
+
+-   `**step**: `string` The current step of the job.
+    -   `"pending"`: The job has not started.
+    -   `"running"`: The job is in progress.
+    -   `"done"`: The job has completed and the files can be downloaded.
+-   **filesConverted**: `number` The number of files this job has converted.
+
+#### `files`
+
+An array of objects defining the files this job is responsible for.
+
+#### `module`
+
+The module the job will use for conversion.
+
+#### `options`
+
+The module options passed to the job.
+
+### Methods
+
+#### `async run(onStep)`
+
+Run the job.
+
+-   **onStep**: `function` An optional asynchronous callback to run when each step of the job is complete. `onStep` is passed one argument, the job's `status` property.
 
 ---
 

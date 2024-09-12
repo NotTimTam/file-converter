@@ -82,6 +82,8 @@ export default class Job {
 	/**
 	 * Run the job.
 	 * @param {function} onStep An optional asynchronous callback to run when each step of the job is complete.
+	 * 
+	 * `onStep` is passed one argument, the job's `status` property.
 	 */
 	async run(onStep) {
 		this.status.step = "running";
