@@ -323,7 +323,7 @@ export default class Module {
 						if (valid !== true) throw new Error(valid);
 					} else
 						throw new Error(
-							`(${label}) This module's 'customReturn' parameter is 'false'/'undefined', but the module's method callback returns a file data object, even though it shouldn't.`
+							`(${label}) This module's 'customReturn' parameter is 'false'/'undefined', but the module's method callback returns something, even though it shouldn't.`
 						);
 				} else {
 					// If the method callback does NOT return file data.
