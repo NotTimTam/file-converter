@@ -105,11 +105,11 @@ export default class Job {
 				},
 				options
 			);
+
+			this.status.step = "done";
 		} catch (err) {
 			this.status.step = "failed";
 			this.status.error = err.toString();
 		}
-
-		this.status.step = "done";
 	}
 }
