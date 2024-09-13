@@ -142,7 +142,7 @@ export default class Module {
 			for (const mimetype of from) {
 				if (
 					typeof mimetype !== "string" ||
-					(!Object.values(mime.types).includes(mimetype) &&
+					(!Object.keys(mime.extensions).includes(mimetype) &&
 						!customReturn)
 				)
 					throw new SyntaxError(
@@ -152,7 +152,7 @@ export default class Module {
 		else if (
 			typeof from !== "string" ||
 			(typeof from === "string" &&
-				!Object.values(mime.types).includes(from) &&
+				!Object.keys(mime.extensions).includes(from) &&
 				!customReturn)
 		)
 			throw new SyntaxError(
@@ -167,7 +167,7 @@ export default class Module {
 		if (
 			typeof to !== "string" ||
 			(typeof to === "string" &&
-				!Object.values(mime.types).includes(to) &&
+				!Object.keys(mime.extensions).includes(to) &&
 				!customReturn)
 		)
 			throw new SyntaxError(
@@ -262,7 +262,7 @@ export default class Module {
 				if (
 					!value ||
 					typeof value !== "string" ||
-					!Object.values(mime.types).includes(value)
+					!Object.keys(mime.extensions).includes(value)
 				)
 					return `Expected a valid mimetype for file field "mimetype".`;
 

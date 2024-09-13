@@ -48,7 +48,9 @@ export const validateMimeType = (req, res) => {
 				.status(400)
 				.send("Invalid 'value' query parameter provided.");
 
-		const sendObject = { valid: Object.values(mime.types).includes(value) };
+		const sendObject = {
+			valid: Object.keys(mime.extensions).includes(value),
+		};
 
 		if (sendObject.valid) {
 			sendObject.extension = mime.extension(value);
