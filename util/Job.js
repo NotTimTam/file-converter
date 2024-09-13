@@ -92,18 +92,23 @@ export default class Job {
 
 		const { files, module, fileConverter, options } = this;
 
-		await module.convert(
-			files,
-			async ({ size }) => {
-				fileConverter.stats.dataConverted += size / 1e6;
-				fileConverter.stats.filesConverted++;
-				this.status.filesConverted++;
+		try {
+			await module.convert(
+				files,
+				async ({ size }) => {
+					fileConverter.stats.dataConverted += size / 1e6;
+					fileConverter.stats.filesConverted++;
+					this.status.filesConverted++;
 
-				if (onStep && typeof onStep === "function")
-					await onStep(this.status);
-			},
-			options
-		);
+					if (onStep && typeof onStep === "function")
+						await onStep(this.status);
+				},
+				options
+			);
+		} catch (err) {
+			this.status.step = "failed";
+			this.status.error = err.toString();
+		}
 
 		this.status.step = "done";
 	}

@@ -230,6 +230,7 @@ An object containing data on the status of the job.
     -   `"pending"`: The job has not started.
     -   `"running"`: The job is in progress.
     -   `"done"`: The job has completed and the files can be downloaded.
+    -   `"error"`: An uncaught error occured during the conversion process. A `error` field is added to the status object in this case.
 -   **filesConverted**: `number` The number of files this job has converted.
 
 #### `files`
