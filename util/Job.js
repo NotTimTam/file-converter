@@ -62,6 +62,8 @@ export default class Job {
 	 * @returns {Object} The populated options.
 	 */
 	__populateOptions(options) {
+		if (!this.module.options) return undefined;
+
 		// Get all default values.
 		const defaults = Object.fromEntries(
 			this.module.options
@@ -82,7 +84,7 @@ export default class Job {
 	/**
 	 * Run the job.
 	 * @param {function} onStep An optional asynchronous callback to run when each step of the job is complete.
-	 * 
+	 *
 	 * `onStep` is passed one argument, the job's `status` property.
 	 */
 	async run(onStep) {
