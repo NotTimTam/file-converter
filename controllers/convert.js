@@ -88,20 +88,21 @@ export const convert = async (req, res) => {
 
 		const parsedOptions = options && JSON.parse(options);
 
-		for (const { label, required } of moduleObject.options) {
-			// If a value is required, but none is provided
-			if (
-				required &&
-				(!parsedOptions.hasOwnProperty(label) ||
-					parsedOptions[label] === undefined ||
-					parsedOptions[label] === null)
-			)
-				return res
-					.status(400)
-					.send(
-						`The "${moduleObject.label}" module requires a value for the option "${label}", but none was provided.`
-					);
-		}
+		if (moduleObject.options)
+			for (const { label, required } of moduleObject.options) {
+				// If a value is required, but none is provided
+				if (
+					required &&
+					(!parsedOptions.hasOwnProperty(label) ||
+						parsedOptions[label] === undefined ||
+						parsedOptions[label] === null)
+				)
+					return res
+						.status(400)
+						.send(
+							`The "${moduleObject.label}" module requires a value for the option "${label}", but none was provided.`
+						);
+			}
 
 		if (parsedOptions) {
 			for (const [option, value] of Object.entries(parsedOptions)) {
@@ -138,9 +139,9 @@ export const convert = async (req, res) => {
 
 		const job = fileConverter.createJob(files, moduleObject, parsedOptions);
 
-		job.run(); // Start the job asynchronously without awaiting it.
+		res.status(200).send({ jobId: job._id });
 
-		return res.status(200).send({ jobId: job._id });
+		job.run(); // Start the job asynchronously without awaiting it.
 	} catch (err) {
 		return await unlinkAndGo(req.files, () => handleError(res, err));
 	}
