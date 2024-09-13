@@ -313,41 +313,47 @@ export default class Module {
 
 		files = await Promise.all(
 			files.map(async (file) => {
-				const old = JSON.stringify(file);
-				const newFile = await this.method(file, options);
+				try {
+					const old = JSON.stringify(file);
+					const newFile = await this.method(file, options);
 
-				// If the method callback does return file data.
-				if (newFile) {
-					if (customReturn) {
-						const valid = this.validateConvertedFileObject(newFile);
-						if (valid !== true) throw new Error(valid);
-					} else
-						throw new Error(
-							`(${label}) This module's 'customReturn' parameter is 'false'/'undefined', but the module's method callback returns something, even though it shouldn't.`
-						);
-				} else {
-					// If the method callback does NOT return file data.
-					if (customReturn)
-						throw new Error(
-							`(${label}) This module's 'customReturn' parameter is 'true', but the module's method callback does not return a file data object.`
-						);
-					else {
-						file.mimetype = this.to;
-						file.encoding = mime.charset(file.mimetype);
+					// If the method callback does return file data.
+					if (newFile) {
+						if (customReturn) {
+							const valid =
+								this.validateConvertedFileObject(newFile);
+							if (valid !== true) throw new Error(valid);
+						} else
+							throw new Error(
+								`(${label}) This module's 'customReturn' parameter is 'false'/'undefined', but the module's method callback returns something, even though it shouldn't.`
+							);
+					} else {
+						// If the method callback does NOT return file data.
+						if (customReturn)
+							throw new Error(
+								`(${label}) This module's 'customReturn' parameter is 'true', but the module's method callback does not return a file data object.`
+							);
+						else {
+							file.mimetype = this.to;
+							file.encoding = mime.charset(file.mimetype);
 
-						// Replace the filename.
-						file.originalname = FileConverter.replaceFileExtension(
-							file.originalname,
-							mime.extension(file.mimetype)
-						);
+							// Replace the filename.
+							file.originalname =
+								FileConverter.replaceFileExtension(
+									file.originalname,
+									mime.extension(file.mimetype)
+								);
+						}
 					}
-				}
 
-				if (callback)
-					await callback(
-						JSON.parse(old),
-						customReturn ? newFile : file
-					);
+					if (callback)
+						await callback(
+							JSON.parse(old),
+							customReturn ? newFile : file
+						);
+				} catch (err) {
+					throw err;
+				}
 			})
 		);
 
