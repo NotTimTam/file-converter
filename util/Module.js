@@ -146,7 +146,7 @@ export default class Module {
 						!customReturn)
 				)
 					throw new SyntaxError(
-						`Invalid mimetype provided to Module constructor config.from array. Expected a valid MIME type, or file extension, but got: "${label}".`
+						`Invalid mimetype provided to Module constructor config.from array. Expected a valid MIME type, or file extension, but got "${mimetype}" for module "${label}".`
 					);
 			}
 		else if (
