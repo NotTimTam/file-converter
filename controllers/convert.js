@@ -141,7 +141,11 @@ export const convert = async (req, res) => {
 			}
 		}
 
-		const job = fileConverter.createJob(files, moduleObject, parsedOptions);
+		const job = fileConverter.createJob(
+			fileConverter.__transformFiles(files),
+			moduleObject,
+			parsedOptions
+		);
 
 		res.status(200).send({ jobId: job._id });
 

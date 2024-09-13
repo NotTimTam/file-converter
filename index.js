@@ -184,4 +184,17 @@ export default class FileConverter {
 
 		return filename;
 	}
+
+	/**
+	 * Does necessary transformations to bridge the gap between multer and mime-types.
+	 * @param {Array<Object>} files The multer file references for the files this job will convert.
+	 * @returns {Array<Object>} The transformed files.
+	 */
+	static __transformFiles = (files) =>
+		files.map((file) => {
+			if (file.mimetype === "video/avi")
+				file.mimetype = "video/x-msvideo";
+
+			return file;
+		});
 }
