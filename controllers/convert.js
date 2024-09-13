@@ -82,7 +82,11 @@ export const convert = async (req, res) => {
 					res
 						.status(400)
 						.send(
-							`This conversion module does not support mimetype: "${mimetype}". Supported mimetypes: ${moduleObject.from}`
+							`This conversion module does not support mimetype: "${mimetype}". Supported mimetypes: ${
+								moduleObject.from instanceof Array
+									? `[${moduleObject.from.join(", ")}]`
+									: moduleObject.from
+							}`
 						)
 				);
 
