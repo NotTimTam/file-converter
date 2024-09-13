@@ -82,9 +82,21 @@ export default class Job {
 	}
 
 	/**
+	 * Does necessary transformations to bridge the gap between multer and mime-types.
+	 * @param {Array<Object>} files The multer file references for the files this job will convert.
+	 * @returns {Array<Object>} The transformed files.
+	 */
+	static __transformFiles = (files) =>
+		files.map((file) => {
+			if (file.mimetype === "video/avi")
+				file.mimetype = "video/x-msvideo";
+
+			return file;
+		});
+
+	/**
 	 * Run the job.
 	 * @param {function} onStep An optional asynchronous callback to run when each step of the job is complete.
-	 *
 	 * `onStep` is passed one argument, the job's `status` property.
 	 */
 	async run(onStep) {
@@ -94,7 +106,7 @@ export default class Job {
 
 		try {
 			await module.convert(
-				files,
+				Job.__transformFiles(files),
 				async ({ size }) => {
 					fileConverter.stats.dataConverted += size / 1e6;
 					fileConverter.stats.filesConverted++;
