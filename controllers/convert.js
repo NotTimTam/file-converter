@@ -31,7 +31,7 @@ export const convert = async (req, res) => {
 					.send("No 'files' field provided in request FormData.")
 			);
 
-		const {
+		let {
 			files: { files }, // Multer stores all file fields in a "files" object, which is what cause the nesting.
 		} = req;
 
@@ -75,6 +75,8 @@ export const convert = async (req, res) => {
 						"Invalid 'files' value provided in request. Expected a FormData field containing files."
 					)
 			);
+
+		files = fileConverter.__transformFiles(files);
 
 		for (const { mimetype } of files)
 			if (!moduleObject.convertsFrom(mimetype))
@@ -141,11 +143,7 @@ export const convert = async (req, res) => {
 			}
 		}
 
-		const job = fileConverter.createJob(
-			fileConverter.__transformFiles(files),
-			moduleObject,
-			parsedOptions
-		);
+		const job = fileConverter.createJob(files, moduleObject, parsedOptions);
 
 		res.status(200).send({ jobId: job._id });
 
